@@ -10,6 +10,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.Transacciones
         private decimal monto;
         private DateTime fechaPago;
 
+        // --- PROPIEDADES CON VALIDACIÓN ---
         public Reserva Reserva
         {
             get => reserva;
@@ -37,22 +38,25 @@ namespace ProyectoSegundoParcialPrueba1.Models.Transacciones
             get => fechaPago;
             set
             {
-                if (value == null)
+                if (value == default(DateTime))
                     throw new Exception("La fecha de pago no puede ser nula.");
                 fechaPago = value;
             }
         }
 
-        public Pago(int id, Reserva reserva, decimal monto)
-            : base(id, DateTime.Now)
+        // --- CONSTRUCTOR ---
+        public Pago(int id, Reserva reserva, decimal monto, DateTime fechaPago)
+            : base(id, fechaPago) // pasamos id y fecha a Transaccion
         {
-            this.Reserva = reserva;
-            this.Monto = monto;
-            this.FechaPago = DateTime.Now;
+            Reserva = reserva;
+            Monto = monto;
+            FechaPago = fechaPago;
         }
 
+        // --- MÉTODO IMPRIMIR ---
         public void Imprimir()
         {
+            Console.WriteLine("********** Pago **********");
             Console.WriteLine($"ID: {this.Id}");
             Console.WriteLine($"Reserva: {this.Reserva.Id}");
             Console.WriteLine($"Monto: {this.Monto}");
