@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProyectoSegundoParcialPrueba1.Models.Transacciones;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,11 +7,19 @@ namespace ProyectoSegundoParcialPrueba1.Models.Personas
 {
     public class Cliente : Persona
     {
-        public Cliente(int id, string nombre, string cedula, string telefono, string email, string ciudad)
-            : base(id, nombre, cedula, telefono, email, ciudad)
+        // Propiedades de navegación (relación con reservas)
+        public ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
+
+        // --- CONSTRUCTOR VACÍO (EF Core) ---
+        public Cliente() { }
+
+        // --- CONSTRUCTOR CON PARÁMETROS ---
+        public Cliente(string nombre, string cedula, string telefono, string email, string ciudad)
+            : base(nombre, cedula, telefono, email, ciudad)
         {
         }
 
+        // --- MÉTODO IMPRIMIR ---
         public void Imprimir()
         {
             Console.WriteLine($"ID: {this.Id}");

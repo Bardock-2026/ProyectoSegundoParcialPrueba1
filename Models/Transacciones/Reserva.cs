@@ -13,52 +13,18 @@ namespace ProyectoSegundoParcialPrueba1.Models.Transacciones
         private DateTime fechaInicio;
         private DateTime fechaFin;
 
-        public Cliente Cliente
-        {
-            get => cliente;
-            set
-            {
-                if (value == null)
-                    throw new Exception("Debe seleccionar un cliente válido.");
-                cliente = value;
-            }
-        }
+        public Cliente Cliente { get; set; }
+        public Habitacion Habitacion { get; set; }
+        public DateTime FechaInicio { get; set; }
+        public DateTime FechaFin { get; set; }
 
-        public Habitacion Habitacion
-        {
-            get => habitacion;
-            set
-            {
-                if (value == null)
-                    throw new Exception("Debe seleccionar una habitación válida.");
-                habitacion = value;
-            }
-        }
+        // ✅ Propiedad de navegación para EF Core
+        public Pago Pago { get; set; }
 
-        public DateTime FechaInicio
-        {
-            get => fechaInicio;
-            set
-            {
-                if (value == null)
-                    throw new Exception("La fecha de inicio no puede ser nula.");
-                fechaInicio = value;
-            }
-        }
-
-        public DateTime FechaFin
-        {
-            get => fechaFin;
-            set
-            {
-                if (value <= fechaInicio)
-                    throw new Exception("La fecha de fin debe ser mayor a la fecha de inicio.");
-                fechaFin = value;
-            }
-        }
+        public Reserva() { }
 
         public Reserva(int id, Cliente cliente, Habitacion habitacion, DateTime fechaInicio, DateTime fechaFin)
-            : base(id, DateTime.Now)
+            : base(id, fechaInicio)
         {
             this.Cliente = cliente;
             this.Habitacion = habitacion;
@@ -68,6 +34,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.Transacciones
 
         public void Imprimir()
         {
+            Console.WriteLine("********** Reserva **********");
             Console.WriteLine($"ID: {this.Id}");
             Console.WriteLine($"Cliente: {this.Cliente.Nombre}");
             Console.WriteLine($"Habitación ID: {this.Habitacion.Id}");
@@ -75,6 +42,6 @@ namespace ProyectoSegundoParcialPrueba1.Models.Transacciones
             Console.WriteLine($"Fecha Fin: {this.FechaFin.ToShortDateString()}");
             Console.WriteLine("------------------------------------");
         }
-    }
 
+    }
 }

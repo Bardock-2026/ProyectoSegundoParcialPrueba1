@@ -7,24 +7,14 @@ namespace ProyectoSegundoParcialPrueba1.Models.Personas
     public class Persona
     {
         // --- CAMPOS PRIVADOS ---
-        private int id;
         private string nombre;
         private string cedula;
         private string telefono;
         private string email;
         private string ciudad;
 
-        // --- PROPIEDADES CON VALIDACIÓN ---
-        public int Id
-        {
-            get => id;
-            set
-            {
-                if (value <= 0)
-                    throw new Exception("El ID debe ser mayor a 0.");
-                id = value;
-            }
-        }
+        // --- PROPIEDADES ---
+        public int Id { get; set; } // SQL lo asigna automáticamente
 
         public string Nombre
         {
@@ -81,10 +71,12 @@ namespace ProyectoSegundoParcialPrueba1.Models.Personas
             }
         }
 
-        // --- CONSTRUCTOR ---
-        public Persona(int id, string nombre, string cedula, string telefono, string email, string ciudad)
+        // --- CONSTRUCTOR VACÍO (EF Core) ---
+        public Persona() { }
+
+        // --- CONSTRUCTOR CON PARÁMETROS ---
+        public Persona(string nombre, string cedula, string telefono, string email, string ciudad)
         {
-            this.Id = id;
             this.Nombre = nombre;
             this.Cedula = cedula;
             this.Telefono = telefono;

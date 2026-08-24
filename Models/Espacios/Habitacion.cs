@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProyectoSegundoParcialPrueba1.Models.Transacciones;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,28 +7,20 @@ namespace ProyectoSegundoParcialPrueba1.Models.Espacios
 {
     public class Habitacion
     {
-        private int id;
+        // --- CAMPOS PRIVADOS ---
         private string tipo;
         private decimal precio;
         private string estado;
 
-        public int Id
-        {
-            get => id;
-            set
-            {
-                if (value <= 0)
-                    throw new Exception("El ID debe ser mayor a 0.");
-                id = value;
-            }
-        }
+        // --- PROPIEDADES ---
+        public int Id { get; set; } // SQL lo asigna automáticamente
 
         public string Tipo
         {
             get => tipo;
             set
             {
-                if (value == null || value == "")
+                if (string.IsNullOrWhiteSpace(value))
                     throw new Exception("El tipo no puede estar vacío.");
                 tipo = value;
             }
@@ -55,22 +48,29 @@ namespace ProyectoSegundoParcialPrueba1.Models.Espacios
             }
         }
 
-        public Habitacion(int id, string tipo, decimal precio, string estado = "Disponible")
+        // ✅ Relación con Reservas (1 a muchos)
+        public ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
+
+        // --- CONSTRUCTOR VACÍO (EF Core) ---
+        public Habitacion() { }
+
+        // --- CONSTRUCTOR CON PARÁMETROS ---
+        public Habitacion(string tipo, decimal precio, string estado = "Disponible")
         {
-            this.Id = id;
             this.Tipo = tipo;
             this.Precio = precio;
             this.Estado = estado;
         }
 
-        public void Imprimir()
+        // --- MÉTODO IMPRIMIR ---
+        public new void Imprimir() // usamos "new" porque oculta el heredado de Transaccion/Espacio
         {
+            Console.WriteLine("********** Habitación **********");
             Console.WriteLine($"ID: {this.Id}");
             Console.WriteLine($"Tipo: {this.Tipo}");
             Console.WriteLine($"Precio: {this.Precio}");
             Console.WriteLine($"Estado: {this.Estado}");
             Console.WriteLine("------------------------------------");
         }
-
     }
 }

@@ -1,14 +1,14 @@
-﻿using ProyectoSegundoParcialPrueba1.Models.Transacciones;
+﻿using ProyectoSegundoParcialPrueba1.Datos;
+using ProyectoSegundoParcialPrueba1.Models.Transacciones;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
 {
     public static class PagoCRUD
     {
-        private static List<Pago> pagos = new List<Pago>();
-
         // --- CREAR ---
         public static void CrearPago()
         {
@@ -17,29 +17,33 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
 
             Console.Write("Ingrese ID de la reserva: ");
             int idReserva = Convert.ToInt32(Console.ReadLine());
-            Reserva reserva = ReservaCRUD.ObtenerReservaPorId(idReserva);
 
-            if (reserva == null)
+            using (var context = new HotelDbContext())
             {
-                Console.WriteLine("Reserva no encontrada.");
-                Console.ReadLine();
-                return;
-            }
+                Reserva reserva = context.Reservas.Find(idReserva); // ✅ busca en SQL
 
-            Console.Write("Ingrese monto del pago: ");
-            decimal monto = Convert.ToDecimal(Console.ReadLine());
+                if (reserva == null)
+                {
+                    Console.WriteLine("Reserva no encontrada.");
+                    Console.ReadLine();
+                    return;
+                }
 
-            try
-            {
-                int id = pagos.Count == 0 ? 1 : pagos.Max(p => p.Id) + 1;
-                Pago pago = new Pago(id, reserva, monto, DateTime.Now);
-                pagos.Add(pago);
+                Console.Write("Ingrese monto del pago: ");
+                decimal monto = Convert.ToDecimal(Console.ReadLine());
 
-                Console.WriteLine("Pago registrado exitosamente!!");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
+                try
+                {
+                    Pago pago = new Pago(reserva, monto); // ✅ constructor sin ID
+                    context.Pagos.Add(pago);
+                    context.SaveChanges();                // ✅ guarda en SQL
+
+                    Console.WriteLine("Pago registrado exitosamente!!");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                }
             }
 
             Console.ReadLine();
@@ -51,15 +55,20 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             Console.Clear();
             Console.WriteLine("********** Pagos Registrados **********");
 
-            if (pagos.Count == 0)
+            using (var context = new HotelDbContext())
             {
-                Console.WriteLine("No hay pagos registrados.");
-            }
-            else
-            {
-                foreach (Pago p in pagos)
+                var pagos = context.Pagos.Include(p => p.Reserva).ToList(); // ✅ trae de SQL
+
+                if (pagos.Count == 0)
                 {
-                    p.Imprimir();
+                    Console.WriteLine("No hay pagos registrados.");
+                }
+                else
+                {
+                    foreach (Pago p in pagos)
+                    {
+                        p.Imprimir();
+                    }
                 }
             }
             Console.ReadLine();
@@ -73,16 +82,21 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             Console.Write("Ingrese el ID del pago: ");
             int idIngresado = Convert.ToInt32(Console.ReadLine());
 
-            Pago objPago = pagos.Find(p => p.Id == idIngresado);
+            using (var context = new HotelDbContext())
+            {
+                Pago objPago = context.Pagos
+                                      .Include(p => p.Reserva)
+                                      .FirstOrDefault(p => p.Id == idIngresado);
 
-            if (objPago != null)
-            {
-                Console.WriteLine("Pago encontrado!!");
-                objPago.Imprimir();
-            }
-            else
-            {
-                Console.WriteLine("Pago NO encontrado...");
+                if (objPago != null)
+                {
+                    Console.WriteLine("Pago encontrado!!");
+                    objPago.Imprimir();
+                }
+                else
+                {
+                    Console.WriteLine("Pago NO encontrado...");
+                }
             }
             Console.ReadLine();
         }
@@ -95,20 +109,24 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             Console.Write("Ingrese el ID del pago a actualizar: ");
             int idIngresado = Convert.ToInt32(Console.ReadLine());
 
-            Pago objPago = pagos.Find(p => p.Id == idIngresado);
-
-            if (objPago != null)
+            using (var context = new HotelDbContext())
             {
-                objPago.Imprimir();
+                Pago objPago = context.Pagos.Find(idIngresado);
 
-                Console.Write("Ingrese nuevo monto: ");
-                objPago.Monto = Convert.ToDecimal(Console.ReadLine());
+                if (objPago != null)
+                {
+                    objPago.Imprimir();
 
-                Console.WriteLine("Pago actualizado exitosamente!!");
-            }
-            else
-            {
-                Console.WriteLine("Pago NO encontrado...");
+                    Console.Write("Ingrese nuevo monto: ");
+                    objPago.Monto = Convert.ToDecimal(Console.ReadLine());
+
+                    context.SaveChanges();   // ✅ guarda cambios en SQL
+                    Console.WriteLine("Pago actualizado exitosamente!!");
+                }
+                else
+                {
+                    Console.WriteLine("Pago NO encontrado...");
+                }
             }
             Console.ReadLine();
         }
@@ -121,34 +139,31 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             Console.Write("Ingrese el ID del pago a eliminar: ");
             int idIngresado = Convert.ToInt32(Console.ReadLine());
 
-            Pago objPago = pagos.Find(p => p.Id == idIngresado);
-
-            if (objPago != null)
+            using (var context = new HotelDbContext())
             {
-                objPago.Imprimir();
-                Console.WriteLine($"¿Estás seguro que quieres eliminar el pago ID {objPago.Id}? S/N:");
-                if (Console.ReadLine().ToUpper() == "S")
+                Pago objPago = context.Pagos.Find(idIngresado);
+
+                if (objPago != null)
                 {
-                    pagos.Remove(objPago);
-                    Console.WriteLine("Pago eliminado exitosamente!!");
+                    objPago.Imprimir();
+                    Console.WriteLine($"¿Estás seguro que quieres eliminar el pago ID {objPago.Id}? S/N:");
+                    if (Console.ReadLine().ToUpper() == "S")
+                    {
+                        context.Pagos.Remove(objPago); // ✅ elimina en SQL
+                        context.SaveChanges();
+                        Console.WriteLine("Pago eliminado exitosamente!!");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Operación cancelada!!");
+                    }
                 }
                 else
                 {
-                    Console.WriteLine("Operación cancelada!!");
+                    Console.WriteLine("Pago NO encontrado!!");
                 }
-            }
-            else
-            {
-                Console.WriteLine("Pago NO encontrado!!");
             }
             Console.ReadLine();
         }
-
-        // --- MÉTODO AUXILIAR ---
-        public static Pago ObtenerPagoPorId(int id)
-        {
-            return pagos.Find(p => p.Id == id);
-        }
     }
-
 }
