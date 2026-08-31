@@ -1,4 +1,5 @@
-﻿using ProyectoSegundoParcialPrueba1.Models.CRUDs;
+﻿using Microsoft.EntityFrameworkCore;
+using ProyectoSegundoParcialPrueba1.Models.CRUDs;
 using ProyectoSegundoParcialPrueba1.Models.IA;
 using ProyectoSegundoParcialPrueba1.Services;
 

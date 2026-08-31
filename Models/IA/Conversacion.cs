@@ -1,4 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ProyectoSegundoParcialPrueba1.Models.Correo;
+using ProyectoSegundoParcialPrueba1.Models.Espacios;
+using ProyectoSegundoParcialPrueba1.Models.Personas;
+using ProyectoSegundoParcialPrueba1.Models.Transacciones;
+using ProyectoSegundoParcialPrueba1.Models.Wasap;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -80,6 +85,9 @@ namespace ProyectoSegundoParcialPrueba1.Models.IA
     public class ChatContext : DbContext
     {
         public DbSet<Conversacion> Conversaciones { get; set; }
+        public DbSet<CorreoEnviado> CorreosEnviados { get; set; }
+        public DbSet<WhatsAppEnviado> WhatsAppsEnviados { get; set; }
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -88,8 +96,8 @@ namespace ProyectoSegundoParcialPrueba1.Models.IA
                 optionsBuilder.UseSqlServer(
                     "Server=DESKTOP-DQDC13N\\SQLEXPRESS;Database=HOTELRESERVAS2DO;User Id=sa;Password=1234;TrustServerCertificate=True;",
                     sqlOptions => sqlOptions.EnableRetryOnFailure(
-                        maxRetryCount: 5,
-                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        maxRetryCount: 5,                          // número de reintentos
+                        maxRetryDelay: TimeSpan.FromSeconds(10),   // tiempo máximo entre reintentos
                         errorNumbersToAdd: null
                     )
                 );

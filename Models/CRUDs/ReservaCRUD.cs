@@ -1,11 +1,15 @@
-﻿using ProyectoSegundoParcialPrueba1.Datos;
+﻿using Microsoft.EntityFrameworkCore;
+using ProyectoSegundoParcialPrueba1.Datos;
+using ProyectoSegundoParcialPrueba1.Models.Correo;
 using ProyectoSegundoParcialPrueba1.Models.Espacios;
+using ProyectoSegundoParcialPrueba1.Models.IA;
 using ProyectoSegundoParcialPrueba1.Models.Personas;
 using ProyectoSegundoParcialPrueba1.Models.Transacciones;
+using ProyectoSegundoParcialPrueba1.Models.Wasap;
+using ProyectoSegundoParcialPrueba1.Services;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
 
 namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
 {
@@ -24,6 +28,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             int idHabitacion = Convert.ToInt32(Console.ReadLine());
 
             Console.Write("Ingrese fecha inicio (yyyy-mm-dd): ");
+            
             DateTime fechaInicio = Convert.ToDateTime(Console.ReadLine());
 
             Console.Write("Ingrese fecha fin (yyyy-mm-dd): ");
@@ -58,6 +63,21 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
 
                     context.SaveChanges(); // ✅ guarda en SQL
                     Console.WriteLine("Reserva creada exitosamente!!");
+
+                    // 🚀 Enviar confirmación al cliente
+                    string correoCliente = cliente.Email;       // usa el email guardado en la BD
+                    string numeroCliente = cliente.Telefono;    // usa el número guardado en la BD
+                    string fechaReserva = objReserva.FechaInicio.ToShortDateString();
+
+                    string mensaje = $"Estimado {cliente.Nombre}, su reserva está lista para el día {fechaReserva}.";
+
+                    // Enviar correo
+                    var emailService = new EmailService();
+                    emailService.EnviarCorreo(correoCliente, "Confirmación de Reserva", mensaje);
+
+                    // Enviar WhatsApp
+                    var wsService = new WhatsAppService();
+                    wsService.EnviarWhatsApp(numeroCliente, mensaje);
                 }
             }
             catch (Exception ex)
@@ -136,6 +156,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             {
                 Reserva objReserva = context.Reservas
                                             .Include(r => r.Habitacion)
+                                            .Include(r => r.Cliente)
                                             .FirstOrDefault(r => r.Id == idIngresado);
 
                 if (objReserva != null)
@@ -169,6 +190,38 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
 
                     context.SaveChanges(); // ✅ guarda cambios en SQL
                     Console.WriteLine("Reserva actualizada exitosamente!!");
+
+                    // 🚀 Notificación
+                    string correoCliente = objReserva.Cliente.Email;
+                    string numeroCliente = objReserva.Cliente.Telefono;
+                    string mensaje = $"Estimado {objReserva.Cliente.Nombre}, su reserva ha sido actualizada. Nueva fecha: {objReserva.FechaInicio.ToShortDateString()} - {objReserva.FechaFin.ToShortDateString()}.";
+
+                    var emailService = new EmailService();
+                    emailService.EnviarCorreo(correoCliente, "Actualización de Reserva", mensaje);
+
+                    var wsService = new WhatsAppService();
+                    wsService.EnviarWhatsApp(numeroCliente, mensaje);
+
+                    // ✅ Persistencia en SQL
+                    using (var db = new ChatContext())
+                    {
+                        db.CorreosEnviados.Add(new CorreoEnviado
+                        {
+                            Destinatario = correoCliente,
+                            Asunto = "Actualización de Reserva",
+                            Cuerpo = mensaje,
+                            FechaEnvio = DateTime.Now
+                        });
+
+                        db.WhatsAppsEnviados.Add(new WhatsAppEnviado
+                        {
+                            NumeroDestino = numeroCliente,
+                            Mensaje = mensaje,
+                            FechaEnvio = DateTime.Now
+                        });
+
+                        db.SaveChanges();
+                    }
                 }
                 else
                 {
@@ -190,6 +243,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             {
                 Reserva objReserva = context.Reservas
                                             .Include(r => r.Habitacion)
+                                            .Include(r => r.Cliente)
                                             .FirstOrDefault(r => r.Id == idIngresado);
 
                 if (objReserva != null)
@@ -202,6 +256,38 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                         context.Reservas.Remove(objReserva);
                         context.SaveChanges();
                         Console.WriteLine("Reserva eliminada exitosamente!!");
+
+                        // 🚀 Notificación
+                        string correoCliente = objReserva.Cliente.Email;
+                        string numeroCliente = objReserva.Cliente.Telefono;
+                        string mensaje = $"Estimado {objReserva.Cliente.Nombre}, lamentamos informarle que su reserva ha sido cancelada.";
+
+                        var emailService = new EmailService();
+                        emailService.EnviarCorreo(correoCliente, "Cancelación de Reserva", mensaje);
+
+                        var wsService = new WhatsAppService();
+                        wsService.EnviarWhatsApp(numeroCliente, mensaje);
+
+                        // ✅ Persistencia en SQL
+                        using (var db = new ChatContext())
+                        {
+                            db.CorreosEnviados.Add(new CorreoEnviado
+                            {
+                                Destinatario = correoCliente,
+                                Asunto = "Cancelación de Reserva",
+                                Cuerpo = mensaje,
+                                FechaEnvio = DateTime.Now
+                            });
+
+                            db.WhatsAppsEnviados.Add(new WhatsAppEnviado
+                            {
+                                NumeroDestino = numeroCliente,
+                                Mensaje = mensaje,
+                                FechaEnvio = DateTime.Now
+                            });
+
+                            db.SaveChanges();
+                        }
                     }
                     else
                     {
@@ -217,4 +303,3 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
         }
     }
 }
-

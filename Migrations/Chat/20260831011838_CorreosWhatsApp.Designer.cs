@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProyectoSegundoParcialPrueba1.Models.IA;
 
@@ -11,9 +12,11 @@ using ProyectoSegundoParcialPrueba1.Models.IA;
 namespace ProyectoSegundoParcialPrueba1.Migrations.Chat
 {
     [DbContext(typeof(ChatContext))]
-    partial class ChatContextModelSnapshot : ModelSnapshot
+    [Migration("20260831011838_CorreosWhatsApp")]
+    partial class CorreosWhatsApp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,7 +45,7 @@ namespace ProyectoSegundoParcialPrueba1.Migrations.Chat
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("FechaEnvio")
+                    b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
@@ -90,20 +93,20 @@ namespace ProyectoSegundoParcialPrueba1.Migrations.Chat
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("FechaEnvio")
+                    b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Mensaje")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("NumeroDestino")
+                    b.Property<string>("Numero")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("WhatsAppsEnviados");
+                    b.ToTable("WhatsAppEnviados");
                 });
 #pragma warning restore 612, 618
         }
