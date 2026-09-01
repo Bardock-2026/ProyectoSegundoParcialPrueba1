@@ -15,13 +15,69 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             Console.Clear();
             Console.WriteLine("********** Crear Habitación **********");
 
-            Console.Write("Ingrese tipo: ");
-            string tipo = Console.ReadLine();
+            // ✅ Cambio: menú principal con dos opciones
+            Console.WriteLine("Seleccione el modo de creación:");
+            Console.WriteLine("1. Usar tipos predefinidos (Simple, Doble, Matrimonial, Familiar)");
+            Console.WriteLine("2. Ingresar manualmente tipo y precio");
 
-            Console.Write("Ingrese precio: ");
-            decimal precio = Convert.ToDecimal(Console.ReadLine());
+            Console.Write("\nIngrese opción (1-2): ");
+            int modo = Convert.ToInt32(Console.ReadLine());
 
-            // 🔹 Estado siempre será "Disponible"
+            string tipo;
+            decimal precio;
+
+            if (modo == 1)
+            {
+                // ✅ Cambio: menú de tipos predefinidos
+                Console.WriteLine("\nSeleccione el tipo de habitación:");
+                Console.WriteLine("1. Simple (60)");
+                Console.WriteLine("2. Doble (100)");
+                Console.WriteLine("3. Matrimonial (120)");
+                Console.WriteLine("4. Familiar (150)");
+
+                Console.Write("\nIngrese opción (1-4): ");
+                int opcion = Convert.ToInt32(Console.ReadLine());
+
+                switch (opcion)
+                {
+                    case 1:
+                        tipo = "Simple";
+                        precio = 60;
+                        break;
+                    case 2:
+                        tipo = "Doble";
+                        precio = 100;
+                        break;
+                    case 3:
+                        tipo = "Matrimonial";
+                        precio = 120;
+                        break;
+                    case 4:
+                        tipo = "Familiar";
+                        precio = 150;
+                        break;
+                    default:
+                        throw new Exception("Opción inválida. Debe elegir entre 1 y 4.");
+                }
+            }
+            else if (modo == 2)
+            {
+                // ✅ Cambio: ingreso manual de tipo y precio
+                Console.Write("\nIngrese tipo de habitación: ");
+                tipo = Console.ReadLine();
+
+                Console.Write("Ingrese precio: ");
+                precio = Convert.ToDecimal(Console.ReadLine());
+
+                if (precio <= 0)
+                    throw new Exception("El precio debe ser mayor a 0.");
+            }
+            else
+            {
+                throw new Exception("Opción inválida. Debe elegir 1 o 2.");
+            }
+
+            // ✅ Estado siempre será "Disponible"
             string estado = "Disponible";
 
             try
@@ -32,7 +88,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                     context.Habitaciones.Add(objHabitacion);   // ✅ se agrega al DbSet
                     context.SaveChanges();                     // ✅ se guarda en SQL
                 }
-                Console.WriteLine("Habitación creada exitosamente!! (Estado: Disponible)");
+                Console.WriteLine($"Habitación creada exitosamente!! Tipo: {tipo}, Precio: {precio}, Estado: {estado}");
             }
             catch (Exception ex)
             {
@@ -41,7 +97,6 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
 
             Console.ReadLine();
         }
-
         // --- LISTAR ---
         public static void ListarHabitaciones()
         {
@@ -100,7 +155,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
 
             using (var context = new HotelDbContext())
             {
-                // 🔹 Listar todas las habitaciones desde SQL
+                // ✅ Cambio: listar todas las habitaciones con ID y datos completos
                 var habitaciones = context.Habitaciones.ToList();
 
                 if (habitaciones.Count == 0)
@@ -116,7 +171,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                     Console.WriteLine($"ID Habitación: {h.Id}, Tipo: {h.Tipo}, Precio: {h.Precio}, Estado: {h.Estado}");
                 }
 
-                // 🔹 Pedir ID de la habitación a actualizar
+                // ✅ Cambio: pedir ID de la habitación a actualizar
                 Console.Write("\nIngrese el ID de la habitación a actualizar: ");
                 int idIngresado = Convert.ToInt32(Console.ReadLine());
 
@@ -126,14 +181,77 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                 {
                     objHabitacion.Imprimir();
 
-                    Console.Write("Ingrese nuevo tipo: ");
-                    objHabitacion.Tipo = Console.ReadLine();
+                    // ✅ Cambio: menú principal con dos opciones
+                    Console.WriteLine("Seleccione el modo de actualización:");
+                    Console.WriteLine("1. Usar tipos predefinidos (Simple, Doble, Matrimonial, Familiar)");
+                    Console.WriteLine("2. Ingresar manualmente tipo y precio");
 
-                    Console.Write("Ingrese nuevo precio: ");
-                    objHabitacion.Precio = Convert.ToDecimal(Console.ReadLine());
+                    Console.Write("\nIngrese opción (1-2): ");
+                    int modo = Convert.ToInt32(Console.ReadLine());
 
+                    if (modo == 1)
+                    {
+                        // ✅ Cambio: menú de tipos con precios automáticos
+                        Console.WriteLine("Seleccione el nuevo tipo de habitación:");
+                        Console.WriteLine("1. Simple (60)");
+                        Console.WriteLine("2. Doble (100)");
+                        Console.WriteLine("3. Matrimonial (120)");
+                        Console.WriteLine("4. Familiar (150)");
+
+                        Console.Write("\nIngrese opción (1-4): ");
+                        int opcion = Convert.ToInt32(Console.ReadLine());
+
+                        switch (opcion)
+                        {
+                            case 1:
+                                objHabitacion.Tipo = "Simple";
+                                objHabitacion.Precio = 60;
+                                break;
+                            case 2:
+                                objHabitacion.Tipo = "Doble";
+                                objHabitacion.Precio = 100;
+                                break;
+                            case 3:
+                                objHabitacion.Tipo = "Matrimonial";
+                                objHabitacion.Precio = 120;
+                                break;
+                            case 4:
+                                objHabitacion.Tipo = "Familiar";
+                                objHabitacion.Precio = 150;
+                                break;
+                            default:
+                                throw new Exception("Opción inválida. Debe elegir entre 1 y 4.");
+                        }
+                    }
+                    else if (modo == 2)
+                    {
+                        // ✅ Cambio: ingreso manual de tipo y precio
+                        Console.Write("Ingrese nuevo tipo: ");
+                        objHabitacion.Tipo = Console.ReadLine();
+
+                        Console.Write("Ingrese nuevo precio: ");
+                        decimal nuevoPrecio = Convert.ToDecimal(Console.ReadLine());
+
+                        if (nuevoPrecio <= 0)
+                            throw new Exception("El precio debe ser mayor a 0.");
+
+                        objHabitacion.Precio = nuevoPrecio;
+                    }
+                    else
+                    {
+                        throw new Exception("Opción inválida. Debe elegir 1 o 2.");
+                    }
+
+                    // ✅ Cambio: validación estricta del estado
                     Console.Write("Ingrese nuevo estado (Disponible/Ocupada): ");
-                    objHabitacion.Estado = Console.ReadLine();
+                    string nuevoEstado = Console.ReadLine();
+
+                    if (nuevoEstado != "Disponible" && nuevoEstado != "Ocupada")
+                    {
+                        throw new Exception("Estado inválido. Solo puede ser 'Disponible' u 'Ocupada'.");
+                    }
+
+                    objHabitacion.Estado = nuevoEstado;
 
                     context.SaveChanges();   // ✅ guarda cambios en SQL
                     Console.WriteLine("Habitación actualizada exitosamente!!");

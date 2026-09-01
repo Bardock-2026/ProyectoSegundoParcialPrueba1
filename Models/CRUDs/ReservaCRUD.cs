@@ -25,21 +25,24 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             {
                 using (var context = new HotelDbContext())
                 {
-                    // Listar clientes desde SQL
+                    // ✅ Cambio: listar clientes mostrando si ya tienen reservas
                     Console.WriteLine("=== CLIENTES DISPONIBLES ===");
-                    foreach (var cli in context.Clientes.ToList())
+                    foreach (var cli in context.Clientes.Include(c => c.Reservas).ToList())
                     {
-                        Console.WriteLine($"ID: {cli.Id}, Nombre: {cli.Nombre}, Email: {cli.Email}");
+                        string infoReserva = cli.Reservas.Count > 0
+                            ? $"(Ya tiene {cli.Reservas.Count} reserva(s))"
+                            : "(Sin reservas)";
+                        Console.WriteLine($"ID: {cli.Id}, Nombre: {cli.Nombre}, Email: {cli.Email} {infoReserva}");
                     }
 
-                    // Listar habitaciones disponibles desde SQL
+                    // ✅ Cambio: listar habitaciones disponibles
                     Console.WriteLine("\n=== HABITACIONES DISPONIBLES ===");
                     foreach (var hab in context.Habitaciones.Where(h => h.Estado == "Disponible").ToList())
                     {
                         Console.WriteLine($"ID: {hab.Id}, Tipo: {hab.Tipo}, Precio: {hab.Precio}");
                     }
 
-                    // Pedir selección
+                    // ✅ Pedir selección
                     Console.Write("\nIngrese ID del cliente: ");
                     int idCliente = Convert.ToInt32(Console.ReadLine());
 
@@ -52,15 +55,15 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                     Console.Write("Ingrese fecha fin (yyyy-mm-dd): ");
                     DateTime fechaFin = Convert.ToDateTime(Console.ReadLine());
 
-                    // 🔹 Validaciones con throw new Exception
+                    // ✅ Validaciones con throw new Exception
                     if (fechaInicio < DateTime.Today)
                         throw new Exception("La fecha de inicio no puede ser anterior a la fecha actual.");
 
                     if (fechaFin <= fechaInicio)
                         throw new Exception("La fecha de fin debe ser posterior a la fecha de inicio.");
 
-                    // Buscar en SQL
-                    Cliente cliente = context.Clientes.Find(idCliente);
+                    // ✅ Buscar cliente y habitación
+                    Cliente cliente = context.Clientes.Include(c => c.Reservas).FirstOrDefault(c => c.Id == idCliente);
                     Habitacion habitacion = context.Habitaciones.Find(idHabitacion);
 
                     if (cliente == null)
@@ -69,7 +72,13 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                     if (habitacion == null || habitacion.Estado == "Ocupada")
                         throw new Exception("La habitación no está disponible.");
 
-                    // Crear reserva y guardar en SQL
+                    // ✅ Aviso si el cliente ya tiene reservas
+                    if (cliente.Reservas.Count > 0)
+                    {
+                        Console.WriteLine($"⚠ Atención: El cliente {cliente.Nombre} ya tiene {cliente.Reservas.Count} reserva(s). Se añadirá una nueva.");
+                    }
+
+                    // ✅ Crear reserva y guardar en SQL
                     Reserva objReserva = new Reserva(0, cliente, habitacion, fechaInicio, fechaFin);
                     context.Reservas.Add(objReserva);
 
@@ -78,7 +87,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                     context.SaveChanges(); // ✅ persistencia en SQL
                     Console.WriteLine("Reserva creada exitosamente!!");
 
-                    // 🚀 Notificación
+                    // 🚀 Notificación al cliente
                     string correoCliente = cliente.Email;
                     string numeroCliente = cliente.Telefono;
                     string fechaReserva = objReserva.FechaInicio.ToShortDateString();
@@ -99,6 +108,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
 
             Console.ReadLine();
         }
+
         // --- LISTAR ---
         public static void ListarReservas()
         {
@@ -121,11 +131,28 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                     foreach (Reserva r in reservas)
                     {
                         r.Imprimir();
+
+                        // ✅ Cambio: contar cuántas reservas tiene el cliente
+                        int totalReservasCliente = context.Reservas
+                                                          .Count(res => res.Cliente.Id == r.Cliente.Id);
+
+                        // ✅ Mostrar mensaje según cantidad
+                        if (totalReservasCliente > 0)
+                        {
+                            Console.WriteLine($"--> El cliente {r.Cliente.Nombre} tiene {totalReservasCliente} reserva(s) en total.");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"--> El cliente {r.Cliente.Nombre} no tiene reservas.");
+                        }
+
+                        Console.WriteLine("------------------------------------------");
                     }
                 }
             }
             Console.ReadLine();
         }
+
 
         // --- BUSCAR ---
         public static void BuscarReserva()
@@ -163,7 +190,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
 
             using (var context = new HotelDbContext())
             {
-                // 🔹 Listar todas las reservas disponibles con ID de cliente y habitación
+                // ✅ Listar todas las reservas con ID de cliente y habitación
                 var reservas = context.Reservas
                                       .Include(r => r.Cliente)
                                       .Include(r => r.Habitacion)
@@ -182,7 +209,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                     Console.WriteLine($"ID Reserva: {r.Id}, Cliente: {r.Cliente.Id} - {r.Cliente.Nombre}, Habitación: {r.Habitacion.Id} - {r.Habitacion.Tipo}, Inicio: {r.FechaInicio.ToShortDateString()}, Fin: {r.FechaFin.ToShortDateString()}");
                 }
 
-                // 🔹 Pedir ID de la reserva a actualizar
+                // ✅ Pedir ID de la reserva a actualizar
                 Console.Write("\nIngrese el ID de la reserva a actualizar: ");
                 int idIngresado = Convert.ToInt32(Console.ReadLine());
 
@@ -192,13 +219,13 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                 {
                     objReserva.Imprimir();
 
+                    // ✅ Actualizar fechas
                     Console.Write("Ingrese nueva fecha inicio (yyyy-mm-dd): ");
                     DateTime nuevaFechaInicio = Convert.ToDateTime(Console.ReadLine());
 
                     Console.Write("Ingrese nueva fecha fin (yyyy-mm-dd): ");
                     DateTime nuevaFechaFin = Convert.ToDateTime(Console.ReadLine());
 
-                    // 🔹 Validaciones
                     if (nuevaFechaInicio < DateTime.Today)
                         throw new Exception("La fecha de inicio no puede ser anterior a la fecha actual.");
 
@@ -208,7 +235,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                     objReserva.FechaInicio = nuevaFechaInicio;
                     objReserva.FechaFin = nuevaFechaFin;
 
-                    // 🔹 Mostrar clientes disponibles con ID
+                    // ✅ Mostrar clientes disponibles
                     Console.WriteLine("\n=== CLIENTES DISPONIBLES ===");
                     foreach (var cli in context.Clientes.ToList())
                     {
@@ -223,7 +250,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                         objReserva.Cliente = nuevoCliente;
                     }
 
-                    // 🔹 Mostrar habitaciones disponibles con ID
+                    // ✅ Mostrar habitaciones disponibles
                     Console.WriteLine("\n=== HABITACIONES DISPONIBLES ===");
                     foreach (var hab in context.Habitaciones.Where(h => h.Estado == "Disponible").ToList())
                     {
@@ -236,18 +263,25 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
 
                     if (nuevaHabitacion != null && nuevaHabitacion.Estado == "Disponible")
                     {
-                        objReserva.Habitacion.Estado = "Disponible"; // liberar anterior
+                        // ✅ Liberar la habitación anterior
+                        objReserva.Habitacion.Estado = "Disponible";
+
+                        // ✅ Asignar la nueva habitación
                         objReserva.Habitacion = nuevaHabitacion;
                         nuevaHabitacion.Estado = "Ocupada";
+                    }
+                    else
+                    {
+                        throw new Exception("La habitación seleccionada no está disponible.");
                     }
 
                     context.SaveChanges(); // ✅ guarda cambios en SQL
                     Console.WriteLine("Reserva actualizada exitosamente!!");
 
-                    // 🚀 Notificación
+                    // 🚀 Notificación al cliente
                     string correoCliente = objReserva.Cliente.Email;
                     string numeroCliente = objReserva.Cliente.Telefono;
-                    string mensaje = $"Estimado {objReserva.Cliente.Nombre}, su reserva ha sido actualizada correctamente. Nueva fecha: {objReserva.FechaInicio.ToShortDateString()} - {objReserva.FechaFin.ToShortDateString()}.";
+                    string mensaje = $"Estimado {objReserva.Cliente.Nombre}, su reserva ha sido actualizada correctamente. Nueva fecha: {objReserva.FechaInicio.ToShortDateString()} - {objReserva.FechaFin.ToShortDateString()}, Habitación: {objReserva.Habitacion.Tipo}.";
 
                     var emailService = new EmailService();
                     emailService.EnviarCorreo(correoCliente, "Actualización de Reserva", mensaje);
@@ -255,7 +289,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                     var wsService = new WhatsAppService();
                     wsService.EnviarWhatsApp(numeroCliente, mensaje);
 
-                    // ✅ Persistencia en SQL
+                    // ✅ Persistencia en SQL (historial de envíos)
                     using (var db = new ChatContext())
                     {
                         db.CorreosEnviados.Add(new CorreoEnviado
@@ -283,8 +317,6 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             }
             Console.ReadLine();
         }
-
-
 
         // --- ELIMINAR ---
         public static void EliminarReserva()

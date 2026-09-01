@@ -52,7 +52,10 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
 
             using (var context = new HotelDbContext())
             {
-                var clientes = context.Clientes.ToList();  // ✅ trae de SQL
+                // ✅ Cambio: incluir reservas al traer clientes
+                var clientes = context.Clientes
+                                      .Include(c => c.Reservas)
+                                      .ToList();
 
                 if (clientes.Count == 0)
                 {
@@ -63,11 +66,25 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                     foreach (Cliente c in clientes)
                     {
                         c.Imprimir();
+
+                        // ✅ Cambio: mostrar si el cliente tiene reservas ANTES de la línea
+                        if (c.Reservas != null && c.Reservas.Count > 0)
+                        {
+                            Console.WriteLine($"--> Cliente con {c.Reservas.Count} reserva(s).");
+                        }
+                        else
+                        {
+                            Console.WriteLine("--> Cliente sin reservas.");
+                        }
+
+                        // ✅ Línea divisoria después del mensaje
+                        Console.WriteLine("------------------------------------------");
                     }
                 }
             }
             Console.ReadLine();
         }
+
 
         // --- BUSCAR ---
         public static void BuscarCliente()
@@ -99,25 +116,48 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
         {
             Console.Clear();
             Console.WriteLine("********** Actualizar Cliente **********");
-            Console.Write("Ingrese el ID del cliente a actualizar: ");
-            int idIngresado = Convert.ToInt32(Console.ReadLine());
 
             using (var context = new HotelDbContext())
             {
-                Cliente objCliente = context.Clientes.Find(idIngresado);
+                // ✅ Listar todos los clientes disponibles
+                var clientes = context.Clientes.ToList();
+
+                if (clientes.Count == 0)
+                {
+                    Console.WriteLine("No hay clientes registrados.");
+                    Console.ReadLine();
+                    return;
+                }
+
+                Console.WriteLine("=== CLIENTES DISPONIBLES ===");
+                foreach (var c in clientes)
+                {
+                    Console.WriteLine($"ID Cliente: {c.Id}, Nombre: {c.Nombre}, Cédula: {c.Cedula}, Teléfono: {c.Telefono}, Email: {c.Email}, Ciudad: {c.Ciudad}");
+                }
+
+                // ✅ Pedir ID del cliente a actualizar
+                Console.Write("\nIngrese el ID del cliente a actualizar: ");
+                int idIngresado = Convert.ToInt32(Console.ReadLine());
+
+                Cliente objCliente = clientes.FirstOrDefault(c => c.Id == idIngresado);
 
                 if (objCliente != null)
                 {
                     objCliente.Imprimir();
 
+                    // ✅ Pedir nuevos datos
                     Console.Write("Ingrese el nuevo nombre: ");
                     objCliente.Nombre = Console.ReadLine();
+
                     Console.Write("Ingrese la nueva cédula: ");
                     objCliente.Cedula = Console.ReadLine();
+
                     Console.Write("Ingrese el nuevo teléfono: ");
                     objCliente.Telefono = Console.ReadLine();
+
                     Console.Write("Ingrese el nuevo email: ");
                     objCliente.Email = Console.ReadLine();
+
                     Console.Write("Ingrese la nueva ciudad: ");
                     objCliente.Ciudad = Console.ReadLine();
 
@@ -132,16 +172,35 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             Console.ReadLine();
         }
 
+
         // --- ELIMINAR ---
         public static void EliminarCliente()
         {
             Console.Clear();
             Console.WriteLine("********** Eliminar Cliente **********");
-            Console.Write("Ingrese el ID del cliente a eliminar: ");
-            int idIngresado = Convert.ToInt32(Console.ReadLine());
 
             using (var context = new HotelDbContext())
             {
+                // ✅ Mostrar clientes disponibles antes de pedir el ID
+                var clientes = context.Clientes.ToList();
+
+                if (clientes.Count == 0)
+                {
+                    Console.WriteLine("No hay clientes registrados.");
+                    Console.ReadLine();
+                    return;
+                }
+
+                Console.WriteLine("=== CLIENTES DISPONIBLES ===");
+                foreach (var c in clientes)
+                {
+                    Console.WriteLine($"ID: {c.Id}, Nombre: {c.Nombre}, Cédula: {c.Cedula}, Teléfono: {c.Telefono}, Email: {c.Email}, Ciudad: {c.Ciudad}");
+                }
+
+                // 🔹 Pedir ID del cliente a eliminar
+                Console.Write("\nIngrese el ID del cliente a eliminar: ");
+                int idIngresado = Convert.ToInt32(Console.ReadLine());
+
                 Cliente objCliente = context.Clientes.Find(idIngresado);
 
                 if (objCliente != null)
@@ -166,5 +225,6 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             }
             Console.ReadLine();
         }
+
     }
 }
