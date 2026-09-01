@@ -21,8 +21,8 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             Console.Write("Ingrese precio: ");
             decimal precio = Convert.ToDecimal(Console.ReadLine());
 
-            Console.Write("Ingrese estado (Disponible/Ocupada): ");
-            string estado = Console.ReadLine();
+            // 🔹 Estado siempre será "Disponible"
+            string estado = "Disponible";
 
             try
             {
@@ -32,7 +32,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                     context.Habitaciones.Add(objHabitacion);   // ✅ se agrega al DbSet
                     context.SaveChanges();                     // ✅ se guarda en SQL
                 }
-                Console.WriteLine("Habitación creada exitosamente!!");
+                Console.WriteLine("Habitación creada exitosamente!! (Estado: Disponible)");
             }
             catch (Exception ex)
             {
@@ -97,12 +97,30 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
         {
             Console.Clear();
             Console.WriteLine("********** Actualizar Habitación **********");
-            Console.Write("Ingrese el ID de la habitación a actualizar: ");
-            int idIngresado = Convert.ToInt32(Console.ReadLine());
 
             using (var context = new HotelDbContext())
             {
-                Habitacion objHabitacion = context.Habitaciones.Find(idIngresado);
+                // 🔹 Listar todas las habitaciones desde SQL
+                var habitaciones = context.Habitaciones.ToList();
+
+                if (habitaciones.Count == 0)
+                {
+                    Console.WriteLine("No hay habitaciones registradas.");
+                    Console.ReadLine();
+                    return;
+                }
+
+                Console.WriteLine("=== HABITACIONES DISPONIBLES ===");
+                foreach (var h in habitaciones)
+                {
+                    Console.WriteLine($"ID Habitación: {h.Id}, Tipo: {h.Tipo}, Precio: {h.Precio}, Estado: {h.Estado}");
+                }
+
+                // 🔹 Pedir ID de la habitación a actualizar
+                Console.Write("\nIngrese el ID de la habitación a actualizar: ");
+                int idIngresado = Convert.ToInt32(Console.ReadLine());
+
+                Habitacion objHabitacion = habitaciones.FirstOrDefault(h => h.Id == idIngresado);
 
                 if (objHabitacion != null)
                 {
@@ -127,18 +145,35 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             }
             Console.ReadLine();
         }
-
         // --- ELIMINAR ---
         public static void EliminarHabitacion()
         {
             Console.Clear();
             Console.WriteLine("********** Eliminar Habitación **********");
-            Console.Write("Ingrese el ID de la habitación a eliminar: ");
-            int idIngresado = Convert.ToInt32(Console.ReadLine());
 
             using (var context = new HotelDbContext())
             {
-                Habitacion objHabitacion = context.Habitaciones.Find(idIngresado);
+                // 🔹 Listar todas las habitaciones desde SQL
+                var habitaciones = context.Habitaciones.ToList();
+
+                if (habitaciones.Count == 0)
+                {
+                    Console.WriteLine("No hay habitaciones registradas.");
+                    Console.ReadLine();
+                    return;
+                }
+
+                Console.WriteLine("=== HABITACIONES DISPONIBLES ===");
+                foreach (var h in habitaciones)
+                {
+                    Console.WriteLine($"ID: {h.Id}, Tipo: {h.Tipo}, Precio: {h.Precio}, Estado: {h.Estado}");
+                }
+
+                // 🔹 Pedir ID de la habitación a eliminar
+                Console.Write("\nIngrese el ID de la habitación a eliminar: ");
+                int idIngresado = Convert.ToInt32(Console.ReadLine());
+
+                Habitacion objHabitacion = habitaciones.FirstOrDefault(h => h.Id == idIngresado);
 
                 if (objHabitacion != null)
                 {
@@ -164,3 +199,4 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
         }
     }
 }
+

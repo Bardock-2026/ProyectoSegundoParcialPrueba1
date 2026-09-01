@@ -37,7 +37,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.Transacciones
             Console.WriteLine("********** Reserva **********");
             Console.WriteLine($"ID: {this.Id}");
             Console.WriteLine($"Cliente: {this.Cliente.Nombre}");
-            Console.WriteLine($"Habitación ID: {this.Habitacion.Id}");
+            Console.WriteLine($"Habitación: {this.Habitacion.Id} - {this.Habitacion.Tipo}");
             Console.WriteLine($"Fecha Inicio: {this.FechaInicio.ToShortDateString()}");
             Console.WriteLine($"Fecha Fin: {this.FechaFin.ToShortDateString()}");
             Console.WriteLine("------------------------------------");

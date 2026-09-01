@@ -21,61 +21,73 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             Console.Clear();
             Console.WriteLine("********** Crear Reserva **********");
 
-            Console.Write("Ingrese ID del cliente: ");
-            int idCliente = Convert.ToInt32(Console.ReadLine());
-
-            Console.Write("Ingrese ID de la habitación: ");
-            int idHabitacion = Convert.ToInt32(Console.ReadLine());
-
-            Console.Write("Ingrese fecha inicio (yyyy-mm-dd): ");
-            
-            DateTime fechaInicio = Convert.ToDateTime(Console.ReadLine());
-
-            Console.Write("Ingrese fecha fin (yyyy-mm-dd): ");
-            DateTime fechaFin = Convert.ToDateTime(Console.ReadLine());
-
             try
             {
                 using (var context = new HotelDbContext())
                 {
+                    // Listar clientes desde SQL
+                    Console.WriteLine("=== CLIENTES DISPONIBLES ===");
+                    foreach (var cli in context.Clientes.ToList())
+                    {
+                        Console.WriteLine($"ID: {cli.Id}, Nombre: {cli.Nombre}, Email: {cli.Email}");
+                    }
+
+                    // Listar habitaciones disponibles desde SQL
+                    Console.WriteLine("\n=== HABITACIONES DISPONIBLES ===");
+                    foreach (var hab in context.Habitaciones.Where(h => h.Estado == "Disponible").ToList())
+                    {
+                        Console.WriteLine($"ID: {hab.Id}, Tipo: {hab.Tipo}, Precio: {hab.Precio}");
+                    }
+
+                    // Pedir selección
+                    Console.Write("\nIngrese ID del cliente: ");
+                    int idCliente = Convert.ToInt32(Console.ReadLine());
+
+                    Console.Write("Ingrese ID de la habitación: ");
+                    int idHabitacion = Convert.ToInt32(Console.ReadLine());
+
+                    Console.Write("Ingrese fecha inicio (yyyy-mm-dd): ");
+                    DateTime fechaInicio = Convert.ToDateTime(Console.ReadLine());
+
+                    Console.Write("Ingrese fecha fin (yyyy-mm-dd): ");
+                    DateTime fechaFin = Convert.ToDateTime(Console.ReadLine());
+
+                    // 🔹 Validaciones con throw new Exception
+                    if (fechaInicio < DateTime.Today)
+                        throw new Exception("La fecha de inicio no puede ser anterior a la fecha actual.");
+
+                    if (fechaFin <= fechaInicio)
+                        throw new Exception("La fecha de fin debe ser posterior a la fecha de inicio.");
+
+                    // Buscar en SQL
                     Cliente cliente = context.Clientes.Find(idCliente);
                     Habitacion habitacion = context.Habitaciones.Find(idHabitacion);
 
                     if (cliente == null)
-                    {
-                        Console.WriteLine("Cliente no encontrado.");
-                        Console.ReadLine();
-                        return;
-                    }
+                        throw new Exception("Cliente no encontrado.");
 
                     if (habitacion == null || habitacion.Estado == "Ocupada")
-                    {
-                        Console.WriteLine("La habitación no está disponible.");
-                        Console.ReadLine();
-                        return;
-                    }
+                        throw new Exception("La habitación no está disponible.");
 
+                    // Crear reserva y guardar en SQL
                     Reserva objReserva = new Reserva(0, cliente, habitacion, fechaInicio, fechaFin);
                     context.Reservas.Add(objReserva);
 
-                    // Cambiar estado de la habitación
-                    habitacion.Estado = "Ocupada";
+                    habitacion.Estado = "Ocupada"; // actualizar estado en SQL
 
-                    context.SaveChanges(); // ✅ guarda en SQL
+                    context.SaveChanges(); // ✅ persistencia en SQL
                     Console.WriteLine("Reserva creada exitosamente!!");
 
-                    // 🚀 Enviar confirmación al cliente
-                    string correoCliente = cliente.Email;       // usa el email guardado en la BD
-                    string numeroCliente = cliente.Telefono;    // usa el número guardado en la BD
+                    // 🚀 Notificación
+                    string correoCliente = cliente.Email;
+                    string numeroCliente = cliente.Telefono;
                     string fechaReserva = objReserva.FechaInicio.ToShortDateString();
 
                     string mensaje = $"Estimado {cliente.Nombre}, su reserva está lista para el día {fechaReserva}.";
 
-                    // Enviar correo
                     var emailService = new EmailService();
                     emailService.EnviarCorreo(correoCliente, "Confirmación de Reserva", mensaje);
 
-                    // Enviar WhatsApp
                     var wsService = new WhatsAppService();
                     wsService.EnviarWhatsApp(numeroCliente, mensaje);
                 }
@@ -87,7 +99,6 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
 
             Console.ReadLine();
         }
-
         // --- LISTAR ---
         public static void ListarReservas()
         {
@@ -149,25 +160,60 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
         {
             Console.Clear();
             Console.WriteLine("********** Actualizar Reserva **********");
-            Console.Write("Ingrese el ID de la reserva a actualizar: ");
-            int idIngresado = Convert.ToInt32(Console.ReadLine());
 
             using (var context = new HotelDbContext())
             {
-                Reserva objReserva = context.Reservas
-                                            .Include(r => r.Habitacion)
-                                            .Include(r => r.Cliente)
-                                            .FirstOrDefault(r => r.Id == idIngresado);
+                // 🔹 Listar todas las reservas disponibles con ID de cliente y habitación
+                var reservas = context.Reservas
+                                      .Include(r => r.Cliente)
+                                      .Include(r => r.Habitacion)
+                                      .ToList();
+
+                if (reservas.Count == 0)
+                {
+                    Console.WriteLine("No hay reservas registradas.");
+                    Console.ReadLine();
+                    return;
+                }
+
+                Console.WriteLine("=== RESERVAS DISPONIBLES ===");
+                foreach (var r in reservas)
+                {
+                    Console.WriteLine($"ID Reserva: {r.Id}, Cliente: {r.Cliente.Id} - {r.Cliente.Nombre}, Habitación: {r.Habitacion.Id} - {r.Habitacion.Tipo}, Inicio: {r.FechaInicio.ToShortDateString()}, Fin: {r.FechaFin.ToShortDateString()}");
+                }
+
+                // 🔹 Pedir ID de la reserva a actualizar
+                Console.Write("\nIngrese el ID de la reserva a actualizar: ");
+                int idIngresado = Convert.ToInt32(Console.ReadLine());
+
+                Reserva objReserva = reservas.FirstOrDefault(r => r.Id == idIngresado);
 
                 if (objReserva != null)
                 {
                     objReserva.Imprimir();
 
                     Console.Write("Ingrese nueva fecha inicio (yyyy-mm-dd): ");
-                    objReserva.FechaInicio = Convert.ToDateTime(Console.ReadLine());
+                    DateTime nuevaFechaInicio = Convert.ToDateTime(Console.ReadLine());
 
                     Console.Write("Ingrese nueva fecha fin (yyyy-mm-dd): ");
-                    objReserva.FechaFin = Convert.ToDateTime(Console.ReadLine());
+                    DateTime nuevaFechaFin = Convert.ToDateTime(Console.ReadLine());
+
+                    // 🔹 Validaciones
+                    if (nuevaFechaInicio < DateTime.Today)
+                        throw new Exception("La fecha de inicio no puede ser anterior a la fecha actual.");
+
+                    if (nuevaFechaFin <= nuevaFechaInicio)
+                        throw new Exception("La fecha de fin debe ser posterior a la fecha de inicio.");
+
+                    objReserva.FechaInicio = nuevaFechaInicio;
+                    objReserva.FechaFin = nuevaFechaFin;
+
+                    // 🔹 Mostrar clientes disponibles con ID
+                    Console.WriteLine("\n=== CLIENTES DISPONIBLES ===");
+                    foreach (var cli in context.Clientes.ToList())
+                    {
+                        Console.WriteLine($"ID Cliente: {cli.Id}, Nombre: {cli.Nombre}, Email: {cli.Email}");
+                    }
 
                     Console.Write("Ingrese el ID del nuevo cliente: ");
                     int idCliente = Convert.ToInt32(Console.ReadLine());
@@ -175,6 +221,13 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                     if (nuevoCliente != null)
                     {
                         objReserva.Cliente = nuevoCliente;
+                    }
+
+                    // 🔹 Mostrar habitaciones disponibles con ID
+                    Console.WriteLine("\n=== HABITACIONES DISPONIBLES ===");
+                    foreach (var hab in context.Habitaciones.Where(h => h.Estado == "Disponible").ToList())
+                    {
+                        Console.WriteLine($"ID Habitación: {hab.Id}, Tipo: {hab.Tipo}, Precio: {hab.Precio}");
                     }
 
                     Console.Write("Ingrese el ID de la nueva habitación: ");
@@ -194,7 +247,7 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
                     // 🚀 Notificación
                     string correoCliente = objReserva.Cliente.Email;
                     string numeroCliente = objReserva.Cliente.Telefono;
-                    string mensaje = $"Estimado {objReserva.Cliente.Nombre}, su reserva ha sido actualizada. Nueva fecha: {objReserva.FechaInicio.ToShortDateString()} - {objReserva.FechaFin.ToShortDateString()}.";
+                    string mensaje = $"Estimado {objReserva.Cliente.Nombre}, su reserva ha sido actualizada correctamente. Nueva fecha: {objReserva.FechaInicio.ToShortDateString()} - {objReserva.FechaFin.ToShortDateString()}.";
 
                     var emailService = new EmailService();
                     emailService.EnviarCorreo(correoCliente, "Actualización de Reserva", mensaje);
@@ -231,20 +284,40 @@ namespace ProyectoSegundoParcialPrueba1.Models.CRUDs
             Console.ReadLine();
         }
 
+
+
         // --- ELIMINAR ---
         public static void EliminarReserva()
         {
             Console.Clear();
             Console.WriteLine("********** Eliminar Reserva **********");
-            Console.Write("Ingrese el ID de la reserva a eliminar: ");
-            int idIngresado = Convert.ToInt32(Console.ReadLine());
 
             using (var context = new HotelDbContext())
             {
-                Reserva objReserva = context.Reservas
-                                            .Include(r => r.Habitacion)
-                                            .Include(r => r.Cliente)
-                                            .FirstOrDefault(r => r.Id == idIngresado);
+                // 🔹 Listar todas las reservas disponibles desde SQL
+                var reservas = context.Reservas
+                                      .Include(r => r.Cliente)
+                                      .Include(r => r.Habitacion)
+                                      .ToList();
+
+                if (reservas.Count == 0)
+                {
+                    Console.WriteLine("No hay reservas registradas.");
+                    Console.ReadLine();
+                    return;
+                }
+
+                Console.WriteLine("=== RESERVAS DISPONIBLES ===");
+                foreach (var r in reservas)
+                {
+                    Console.WriteLine($"ID: {r.Id}, Cliente: {r.Cliente.Nombre}, Habitación: {r.Habitacion.Id} - {r.Habitacion.Tipo}, Inicio: {r.FechaInicio.ToShortDateString()}, Fin: {r.FechaFin.ToShortDateString()}");
+                }
+
+                // 🔹 Pedir ID de la reserva a eliminar
+                Console.Write("\nIngrese el ID de la reserva a eliminar: ");
+                int idIngresado = Convert.ToInt32(Console.ReadLine());
+
+                Reserva objReserva = reservas.FirstOrDefault(r => r.Id == idIngresado);
 
                 if (objReserva != null)
                 {
